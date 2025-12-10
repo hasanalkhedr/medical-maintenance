@@ -122,7 +122,7 @@ class RoleResource extends Resource implements HasShieldPermissions
                 //Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\DeleteBulkAction::make(),
+                //Tables\Actions\DeleteBulkAction::make(),
             ]);
     }
 
