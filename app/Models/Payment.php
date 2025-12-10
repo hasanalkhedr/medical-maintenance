@@ -49,15 +49,20 @@ class Payment extends Model
     {
         return $this->hasOne(Check::class);
     }
+
+    public function bank_transfer()
+    {
+        return $this->hasOne(BankTransfer::class);
+    }
     public static function getPaymentMethods(): array
     {
         return [
             'cash' => 'Cash',
             'bank_transfer' => 'Bank Transfer',
             'check' => 'Check',
-            'credit_card' => 'Credit Card',
-            'debit_card' => 'Debit Card',
-            'online' => 'Online Payment',
+            // 'credit_card' => 'Credit Card',
+            // 'debit_card' => 'Debit Card',
+            // 'online' => 'Online Payment',
         ];
     }
 }

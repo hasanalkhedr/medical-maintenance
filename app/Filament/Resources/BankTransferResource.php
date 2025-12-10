@@ -1,24 +1,26 @@
 <?php
+
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\CheckResource\Pages;
-use App\Filament\Resources\CheckResource\RelationManagers;
-use App\Models\Check;
+use App\Filament\Resources\BankTransferResource\Pages;
+use App\Filament\Resources\BankTransferResource\RelationManagers;
+use App\Models\BankTransfer;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Storage;
 
-class CheckResource extends Resource
+class BankTransferResource extends Resource
 {
-    protected static ?string $model = Check::class;
+    protected static ?string $model = BankTransfer::class;
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';
-    protected static ?string $modelLabel = 'Check';
+    protected static ?string $modelLabel = 'Bank Transfer';
     protected static ?string $navigationGroup = 'Financial Management';
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 5;
 
     public static function form(Form $form): Form
     {
@@ -29,29 +31,18 @@ class CheckResource extends Resource
                     ->required()
                     ->searchable()
                     ->preload(),
-                Forms\Components\TextInput::make('check_number')
+                Forms\Components\TextInput::make('doc_number')
                     ->required()
                     ->maxLength(255),
                 Forms\Components\TextInput::make('bank_name')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\TextInput::make('branch_name')
-                    ->maxLength(255),
-                Forms\Components\DatePicker::make('issue_date')
-                    ->required(),
-                Forms\Components\DatePicker::make('due_date')
-                    ->required(),
-                Forms\Components\Select::make('status')
-                    ->options([
-                        'pending' => 'Pending',
-                        'cleared' => 'Cleared',
-                        'bounced' => 'Bounced',
-                    ])
+                Forms\Components\DatePicker::make('doc_date')
                     ->required(),
 
                 Forms\Components\FileUpload::make('document_path')
-                    ->label('Check Document')
-                    ->helperText('Upload check image or PDF (Max: 5MB)')
+                    ->label('Bank Document')
+                    ->helperText('Upload Bank image or PDF (Max: 5MB)')
                     ->acceptedFileTypes([
                         'image/jpeg',
                         'image/png',
@@ -60,7 +51,7 @@ class CheckResource extends Resource
                         'application/pdf',
                     ])
                     ->maxSize(5120)
-                    ->directory('checks/documents')
+                    ->directory('bank_transfers/documents')
                     ->disk('public') // or 'local' - make sure it matches your storage
                     ->visibility('public') // if using public disk
                     ->downloadable()
@@ -77,22 +68,14 @@ class CheckResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('check_number')
+                Tables\Columns\TextColumn::make('doc_number')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('payment.reference')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('bank_name'),
-                Tables\Columns\TextColumn::make('due_date')
+                Tables\Columns\TextColumn::make('doc_date')
                     ->date()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('status')
-                    ->badge()
-                    ->color(fn(string $state): string => match ($state) {
-                        'cleared' => 'success',
-                        'bounced' => 'danger',
-                        'pending' => 'warning',
-                        default => 'gray',
-                    }),
 
                 // Document column
                 Tables\Columns\IconColumn::make('document_path')
@@ -108,22 +91,6 @@ class CheckResource extends Resource
                         : 'No document'),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('status')
-                    ->options([
-                        'pending' => 'Pending',
-                        'cleared' => 'Cleared',
-                        'bounced' => 'Bounced',
-                    ]),
-                Tables\Filters\Filter::make('due_soon')
-                    ->label('Due Soon (within 7 days)')
-                    ->query(fn(Builder $query): Builder => $query
-                        ->where('status', 'pending')
-                        ->whereBetween('due_date', [now(), now()->addDays(7)])),
-                Tables\Filters\Filter::make('overdue')
-                    ->label('Overdue Checks')
-                    ->query(fn(Builder $query): Builder => $query
-                        ->where('status', 'pending')
-                        ->where('due_date', '<', now())),
 
                 // Filter for checks with/without documents
                 Tables\Filters\Filter::make('has_document')
@@ -138,7 +105,7 @@ class CheckResource extends Resource
                 Tables\Actions\Action::make('download')
                     ->label('Download Document')
                     ->icon('heroicon-o-arrow-down-tray')
-                    ->action(function (Check $record) {
+                    ->action(function (BankTransfer $record) {
                         if (!$record->document_path) {
                             return;
                         }
@@ -146,14 +113,14 @@ class CheckResource extends Resource
                         // Get the storage disk
                         $disk = 'public'; // Use the same disk as in FileUpload
 
-                        // Check if file exists
+                        // BankTransfer if file exists
                         if (!Storage::disk($disk)->exists($record->document_path)) {
                             throw new \Exception("File not found: " . $record->document_path);
                         }
 
                         return Storage::disk($disk)->download($record->document_path);
                     })
-                    ->hidden(fn(Check $record): bool => blank($record->document_path)),
+                    ->hidden(fn(BankTransfer $record): bool => blank($record->document_path)),
 
                 Tables\Actions\DeleteAction::make(),
             ])
@@ -174,10 +141,10 @@ class CheckResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListChecks::route('/'),
-            'create' => Pages\CreateCheck::route('/create'),
-            'view' => Pages\ViewCheck::route('/{record}'), // Uncomment this
-            'edit' => Pages\EditCheck::route('/{record}/edit'),
+            'index' => Pages\ListBankTransfers::route('/'),
+            'create' => Pages\CreateBankTransfer::route('/create'),
+            'view' => Pages\ViewBankTransfer::route('/{record}'), // Uncomment this
+            'edit' => Pages\EditBankTransfer::route('/{record}/edit'),
         ];
     }
 }

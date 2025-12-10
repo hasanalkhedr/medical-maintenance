@@ -1,17 +1,17 @@
 <?php
-namespace App\Filament\Resources\CheckResource\Pages;
+namespace App\Filament\Resources\BankTransferResource\Pages;
 
-use App\Filament\Resources\CheckResource;
-use App\Models\Check;
+use App\Filament\Resources\BankTransferResource;
+use App\Models\BankTransfer;
 use Filament\Actions;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Infolists\Components;
 use Filament\Infolists\Infolist;
 use Illuminate\Support\Facades\Storage;
 
-class ViewCheck extends ViewRecord
+class ViewBankTransfer extends ViewRecord
 {
-    protected static string $resource = CheckResource::class;
+    protected static string $resource = BankTransferResource::class;
 
     protected function getHeaderActions(): array
     {
@@ -29,22 +29,13 @@ class ViewCheck extends ViewRecord
                 })
                 ->openUrlInNewTab()
                 ->hidden(fn (): bool => blank($this->record->document_path)),
-
-            Actions\Action::make('mark_as_cleared')
-                ->label('Mark as Cleared')
-                ->icon('heroicon-o-check-badge')
-                ->visible(fn($record) => $record->status === 'pending')
-                ->action(function ($record) {
-                    $record->update(['status' => 'cleared']);
-                })
-                ->requiresConfirmation(),
         ];
     }
 
     protected function getFooterWidgets(): array
     {
         return [
-            CheckResource\Widgets\CheckDocumentWidget::class,
+            BankTransferResource\Widgets\BankTransferDocumentWidget::class,
         ];
     }
 
@@ -53,24 +44,13 @@ class ViewCheck extends ViewRecord
     {
         return $infolist
             ->schema([
-                Components\Section::make('Check Information')
+                Components\Section::make('BankTransfer Information')
                     ->schema([
-                        Components\TextEntry::make('check_number'),
+                        Components\TextEntry::make('doc_number'),
                         Components\TextEntry::make('payment.reference'),
                         Components\TextEntry::make('bank_name'),
-                        Components\TextEntry::make('branch_name'),
-                        Components\TextEntry::make('issue_date')
+                        Components\TextEntry::make('doc_date')
                             ->date(),
-                        Components\TextEntry::make('due_date')
-                            ->date(),
-                        Components\TextEntry::make('status')
-                            ->badge()
-                            ->color(fn(string $state): string => match ($state) {
-                                'cleared' => 'success',
-                                'bounced' => 'danger',
-                                'pending' => 'warning',
-                                default => 'gray',
-                            }),
                     ])->columns(2),
 
                 Components\Section::make('Additional Information')

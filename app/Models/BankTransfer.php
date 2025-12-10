@@ -5,25 +5,21 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Check extends Model
+class BankTransfer extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'payment_id',
-        'check_number',
+        'doc_number',
         'bank_name',
-        'branch_name',
-        'issue_date',
-        'due_date',
-        'status',
+        'doc_date',
         'notes',
         'document_path',
     ];
 
     protected $casts = [
-        'issue_date' => 'date',
-        'due_date' => 'date',
+        'doc_date' => 'date',
     ];
 
     public function payment()
