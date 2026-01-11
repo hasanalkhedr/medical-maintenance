@@ -35,8 +35,9 @@ class Payment extends Model
 
         static::deleted(function ($payment) {
             // Subtract payment amount from invoice when deleted
-            $payment->invoice->decrement('paid_amount', $payment->amount);
-            $payment->invoice->increment('remaining_amount', $payment->amount);
+            $payment->invoice?->decrement('paid_amount', $payment->amount);
+            $payment->invoice?->increment('remaining_amount', $payment->amount);
+            $payment->invoice?->updateStatus();
         });
     }
 
